@@ -12,14 +12,11 @@ Send Jeb a `state` and one or more Choice, Score, or Noul questions. It prompts
 the configured model, reads its token log probabilities, and returns structured
 JSON at `POST /v1/systemone`. The same request format works through the CLI.
 
-Jeb is a compatibility layer, not TypeSafe's Jev model. Its probabilities come from
-the selected language model's reported token log probabilities. They should not be
-treated as Jev-calibrated probabilities. See [TypeSafe's introduction to Jev](https://docs.typesafe.ai/introduction)
+Inspired by this [NobodyWho article](https://www.nobodywho.ai/posts/jev-in-25-lines/). See [TypeSafe's introduction to Jev](https://docs.typesafe.ai/introduction)
 for the original decision model and its three primitives.
 
 ## Requirements
 
-- Go 1.27.1 to build from source, or a Jeb binary or container image.
 - An OpenAI-compatible `POST /v1/chat/completions` endpoint and a model that returns
   `choices[0].logprobs.content[0].top_logprobs` when asked for `logprobs`.
 - A provider that accepts the request fields Jeb sends: `model`, `messages`,
@@ -29,18 +26,25 @@ for the original decision model and its three primitives.
 An endpoint can be OpenAI-compatible for ordinary chat while lacking the token
 log probabilities Jeb needs. Check that capability before using a provider.
 
-## Installation
+### Known Working Endpoints
 
-### Latest stable release (macOS and Linux)
+- [Ollama](https://ollama.com)
+- [OpenAI](https://openai.com)
+- [Cerebras](https://cerebras.ai) Qwen 3.8 only
+
+## Install the Binary
+
+### Linux and macOS
 ```sh
 curl -fsSL https://raw.githubusercontent.com/chand1012/jeb/main/install.sh -o install.sh
-sh install.sh
+# Optional. Set if you need an alternative installation directory
+# export JEB_INSTALL_DIR=/path/to/install
+sh install.sh # installs to ~/.local/bin by default
 ```
 
-Add `~/.local/bin` to your `PATH` if needed. To use a different directory,
-set `JEB_INSTALL_DIR` when running the script.
-Windows users can download the matching ZIP from
-[GitHub Releases](https://github.com/chand1012/jeb/releases).
+### Windows
+Download the binary from [releases](https://github.com/chand1012/jeb/releases)
+
 
 ### Install with Go
 
