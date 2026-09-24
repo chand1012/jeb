@@ -1,0 +1,13 @@
+{
+  "state": "A customer requested a refund 10 days after purchase. The policy allows refunds within 30 days when the item has not been used. The item is unused.",
+  "questions": {
+    "approve_refund": {
+      "type": "noul",
+      "instructions": "Should the refund be approved under the policy?",
+      "criteria": {
+        "true": "Approve when the request is within 30 days and the item is unused.",
+        "false": "Decline when the request is late or the item has been used."
+      }
+    }
+  }
+}

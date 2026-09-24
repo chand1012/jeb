@@ -1,0 +1,14 @@
+{
+  "state": "A small team has one afternoon to fix a slow web app before a demo. The home page takes six seconds to load. A profiler shows that images account for most of the transfer size.",
+  "questions": {
+    "next_action": {
+      "type": "choice",
+      "instructions": "Choose the action most likely to improve the demo experience this afternoon.",
+      "criteria": {
+        "Compress images": "Resize and convert oversized images to a modern format.",
+        "Rewrite the backend": "Replace the API framework and database layer.",
+        "Change the color palette": "Update the site's colors without changing its load time."
+      }
+    }
+  }
+}

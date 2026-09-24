@@ -1,0 +1,15 @@
+{
+  "state": "A release candidate passes all automated tests, but a manual accessibility review found that the primary form cannot be completed using a keyboard.",
+  "questions": {
+    "release_readiness": {
+      "type": "score",
+      "instructions": "Rate whether this release is ready to ship.",
+      "criteria": [
+        "Not ready to ship",
+        "Needs important fixes",
+        "Ready with minor issues",
+        "Fully ready to ship"
+      ]
+    }
+  }
+}

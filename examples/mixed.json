@@ -1,0 +1,26 @@
+{
+  "state": "An outdoor event begins in two hours. Heavy rain is forecast, and an indoor venue is available but holds fewer people.",
+  "questions": {
+    "venue": {
+      "type": "choice",
+      "instructions": "Choose the safer venue for the event.",
+      "criteria": {
+        "Outdoor venue": "Fits everyone, but provides no shelter from heavy rain.",
+        "Indoor venue": "Provides shelter, but requires limiting attendance."
+      }
+    },
+    "outdoor_suitable": {
+      "type": "noul",
+      "instructions": "Is the outdoor venue suitable under the forecast?"
+    },
+    "risk_level": {
+      "type": "score",
+      "instructions": "Rate the weather risk for an outdoor event.",
+      "criteria": [
+        "Low risk",
+        "Moderate risk",
+        "High risk"
+      ]
+    }
+  }
+}

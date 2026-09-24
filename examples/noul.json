@@ -1,0 +1,9 @@
+{
+  "state": "The battery is at 3%, the device has no external power, and a firmware update requires at least 30% battery to begin safely.",
+  "questions": {
+    "start_update": {
+      "type": "noul",
+      "instructions": "Should the firmware update start now?"
+    }
+  }
+}
