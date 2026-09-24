@@ -1,0 +1,96 @@
+name: Crossbuild
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  binaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Check code
+        run: |
+          go test ./...
+          go vet ./...
+
+      - name: Crossbuild and package
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            version="$GITHUB_REF_NAME"
+          else
+            version=dev
+          fi
+          build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          ldflags="-s -w -X github.com/chand1012/jeb/pkg/version.Version=$version -X github.com/chand1012/jeb/pkg/version.CommitHash=$GITHUB_SHA -X github.com/chand1012/jeb/pkg/version.BuildDate=$build_date"
+          mkdir -p dist
+
+          for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64 windows/arm64; do
+            os=${target%/*}
+            arch=${target#*/}
+            name="jeb_${version}_${os}_${arch}"
+            staging=$(mktemp -d)
+            binary=jeb
+            if [[ "$os" == windows ]]; then binary=jeb.exe; fi
+            CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" go build -trimpath \
+              -ldflags "$ldflags" -o "$staging/$binary" .
+
+            if [[ "$os" == linux && "$arch" == amd64 ]]; then
+              output=$("$staging/$binary" version)
+              [[ "$output" == "Version: $version (commit: $GITHUB_SHA, built: $build_date)" ]]
+            fi
+
+            if [[ "$os" == windows ]]; then
+              (cd "$staging" && zip -q "$GITHUB_WORKSPACE/dist/$name.zip" "$binary")
+            else
+              tar -C "$staging" -czf "dist/$name.tar.gz" "$binary"
+            fi
+            rm -rf "$staging"
+          done
+
+          (cd dist && sha256sum ./* > checksums.txt)
+
+      - name: Save build artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: jeb-crossbuild
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: jeb-crossbuild
+          path: dist/
+
+      - name: Verify checksums
+        run: cd dist && sha256sum -c checksums.txt
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

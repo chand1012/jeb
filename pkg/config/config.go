@@ -30,7 +30,6 @@ type OpenAIConfig struct {
 
 	MaxTokens       int           `mapstructure:"max_tokens"`
 	ReasoningEffort string        `mapstructure:"reasoning_effort"`
-	TopLogProbs     int           `mapstructure:"top_logprobs"`
 	Temperature     *float64      `mapstructure:"temperature"`
 	Timeout         time.Duration `mapstructure:"timeout"`
 	MaxRetries      int           `mapstructure:"max_retries"`
@@ -81,7 +80,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("openai.model", "qwen3.5:9b")
 	v.SetDefault("openai.max_tokens", 10)
 	v.SetDefault("openai.reasoning_effort", "none")
-	v.SetDefault("openai.top_logprobs", 3)
 
 	v.SetDefault("openai.timeout", "60s")
 	v.SetDefault("openai.max_retries", 3)
@@ -96,7 +94,6 @@ func configureEnvironment(v *viper.Viper) {
 	mustBindEnv(v, "openai.model", "OPENAI_MODEL")
 	mustBindEnv(v, "openai.max_tokens", "OPENAI_MAX_TOKENS")
 	mustBindEnv(v, "openai.reasoning_effort", "OPENAI_REASONING_EFFORT")
-	mustBindEnv(v, "openai.top_logprobs", "OPENAI_TOP_LOGPROBS")
 	mustBindEnv(v, "openai.temperature", "OPENAI_TEMPERATURE")
 	mustBindEnv(v, "openai.timeout", "OPENAI_TIMEOUT")
 	mustBindEnv(v, "openai.max_retries", "OPENAI_MAX_RETRIES")
@@ -188,16 +185,6 @@ func (c Config) Validate() error {
 			fmt.Errorf(
 				"openai.reasoning_effort has unsupported value %q",
 				c.OpenAI.ReasoningEffort,
-			),
-		)
-	}
-
-	if c.OpenAI.TopLogProbs < 0 || c.OpenAI.TopLogProbs > 20 {
-		errs = append(
-			errs,
-			fmt.Errorf(
-				"openai.top_logprobs must be between 0 and 20, got %d",
-				c.OpenAI.TopLogProbs,
 			),
 		)
 	}

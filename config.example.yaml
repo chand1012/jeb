@@ -1,0 +1,49 @@
+# Jeb example configuration.
+#
+# Copy this file to config.yaml (in the working directory, ./config/, or
+# ~/.config/jeb/) or point JEB_CONFIG_FILE at it.
+#
+# Precedence (highest wins): CLI flags > environment variables > this file >
+# built-in defaults.
+
+server:
+  # Address the HTTP server listens on. Env: JEB_HOST
+  host: 0.0.0.0
+  # Port the HTTP server listens on. Env: JEB_PORT
+  port: 6102
+
+openai:
+  # Base URL of an OpenAI-compatible chat completions API.
+  # The app posts to {base_url}/chat/completions. Env: OPENAI_BASE_URL
+  base_url: http://localhost:11434/v1
+  # Bearer token sent as the Authorization header. Leave empty to send none.
+  # Env: OPENAI_API_KEY
+  api_key: ""
+  # Model identifier to request for every prompt. Env: OPENAI_MODEL
+  model: qwen3.5:9b
+  # Maximum completion tokens the model may generate per prompt.
+  # Keep this small (e.g. 10): answers are a single option number or Yes/No.
+  # Env: OPENAI_MAX_TOKENS
+  max_tokens: 10
+  # Reasoning effort hint: "", "none", "minimal", "low", "medium", "high",
+  # or "xhigh". Providers that don't support it ignore it.
+  # Env: OPENAI_REASONING_EFFORT
+  reasoning_effort: none
+  # Sampling temperature for the model. When omitted (or null), the field is
+  # not sent to the API and the provider's default applies.
+  # Set to 0 to force deterministic output.
+  # Env: OPENAI_TEMPERATURE
+  # temperature: 0.7
+  # HTTP timeout for each completion request.
+  # Env: OPENAI_TIMEOUT
+  timeout: 60s
+  # Number of retries for failed completion requests.
+  # Env: OPENAI_MAX_RETRIES
+  max_retries: 3
+
+concurrency:
+  # Maximum number of prompts sent to the model at the same time.
+  # 1 is sequential; set higher for faster multi-question requests
+  # (respect your provider's rate limits).
+  # Env: JEB_MAX_REQUESTS
+  max_requests: 1

@@ -16,7 +16,6 @@ var configKeys = map[string]string{
 	"model":            "openai.model",
 	"max-tokens":       "openai.max_tokens",
 	"reasoning-effort": "openai.reasoning_effort",
-	"top-logprobs":     "openai.top_logprobs",
 	"timeout":          "openai.timeout",
 	"max-retries":      "openai.max_retries",
 	"max-requests":     "concurrency.max_requests",

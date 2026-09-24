@@ -145,6 +145,7 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 
 		options := ""
 		responseInstruction := ""
+		var optionCount int
 
 		switch q.Type {
 		case "choice":
@@ -157,6 +158,7 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 				keys = append(keys, key)
 			}
 			slices.Sort(keys)
+			optionCount = len(keys)
 			for i, key := range keys {
 				options += fmt.Sprintf("%d) %s - %s\n", i+1, key, criteria[key])
 			}
@@ -165,6 +167,7 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 			// criteria is a []string
 			// coerce it then iterate
 			criteria := q.Criteria.([]string)
+			optionCount = len(criteria)
 			for i, value := range criteria {
 				options += fmt.Sprintf("%d) %s\n", i+1, value)
 			}
@@ -174,6 +177,7 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 			// if nil, simple options
 			if utils.IsNil(q.Criteria) {
 				options = "1) Yes\n2) No"
+				optionCount = 2
 			} else {
 				// if not nil, use the criteria to generate options.
 				// still yes and no, but the input will be labeled as
@@ -186,6 +190,7 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 					}
 					options += fmt.Sprintf("1) %s - %s\n", k, value)
 				}
+				optionCount = 2 // the options are always Yes and No
 			}
 		default:
 			return nil, fmt.Errorf("invalid question type: %s", q.Type)
@@ -196,13 +201,19 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 			Content: fmt.Sprintf("State: %s\nInstructions: %s\nOptions:\n%s\n%s", r.State, q.Instructions, options, responseInstruction),
 		})
 
+		// Ask for as many top logprobs as there are options so every option
+		// can be assigned a probability without biasing the normalization.
+		// (Providers cap this, e.g. at 20; questions with more options than
+		// the cap will have truncated confidence.)
+		topLogProbs := optionCount
+
 		requests = append(requests, JebPrompt{
 			Request: ChatCompletionRequest{
 				Model:           openaiConfig.Model,
 				Messages:        messages,
 				ReasoningEffort: openaiConfig.ReasoningEffort,
 				LogProbs:        true,
-				TopLogProbs:     openaiConfig.TopLogProbs,
+				TopLogProbs:     topLogProbs,
 				Temperature:     openaiConfig.Temperature,
 				MaxTokens:       openaiConfig.MaxTokens,
 			},
@@ -216,6 +227,7 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 }
 
 type JebResponse struct {
+	Model string `json:"model"`
 	// Since answers can be Choice, Score, or Noul, we use any
 	Answers map[string]any `json:"answers"`
 	Usage   Usage          `json:"usage"`

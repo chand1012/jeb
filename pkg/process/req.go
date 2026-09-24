@@ -1,6 +1,8 @@
 package process
 
 import (
+	"sync"
+
 	"github.com/chand1012/jeb/pkg/config"
 	"github.com/chand1012/jeb/pkg/types"
 	"resty.dev/v3"
@@ -16,10 +18,7 @@ func newClient(openaiConfig *config.OpenAIConfig) *resty.Client {
 	return client
 }
 
-func chatCompletionsRequest(req types.ChatCompletionRequest, openaiConfig *config.OpenAIConfig) (types.ChatCompletionsResponse, error) {
-	client := newClient(openaiConfig)
-	defer client.Close()
-
+func chatCompletionsRequest(client *resty.Client, req types.ChatCompletionRequest) (types.ChatCompletionsResponse, error) {
 	var resp types.ChatCompletionsResponse
 	_, err := client.R().
 		SetContentType("application/json").
@@ -36,18 +35,45 @@ func Request(req types.JebRequest, conf *config.Config) (types.JebResponse, erro
 		return types.JebResponse{}, err
 	}
 
-	// will parallelize this later
-	for i := 0; i < len(prompts); i++ {
-		res, err := chatCompletionsRequest(prompts[i].Request, &conf.OpenAI)
-		if err != nil {
-			return types.JebResponse{}, err
-		}
-		prompts[i].Response = res
+	// resty clients are safe for concurrent use, so create one for all prompts.
+	client := newClient(&conf.OpenAI)
+	defer client.Close()
+
+	var (
+		wg    sync.WaitGroup
+		mu    sync.Mutex
+		first error
+	)
+	sem := make(chan struct{}, conf.Concurrency.MaxRequests)
+
+	for i := range prompts {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			res, err := chatCompletionsRequest(client, prompts[i].Request)
+			if err != nil {
+				mu.Lock()
+				if first == nil {
+					first = err
+				}
+				mu.Unlock()
+				return
+			}
+			prompts[i].Response = res
+		}(i)
+	}
+	wg.Wait()
+	if first != nil {
+		return types.JebResponse{}, first
 	}
 
 	responses, err := JebPromptsToJebResponse(prompts)
 	if err != nil {
 		return types.JebResponse{}, err
 	}
+	responses.Model = conf.OpenAI.Model
 	return *responses, nil
 }
