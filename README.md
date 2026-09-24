@@ -29,16 +29,40 @@ for the original decision model and its three primitives.
 An endpoint can be OpenAI-compatible for ordinary chat while lacking the token
 log probabilities Jeb needs. Check that capability before using a provider.
 
+## Installation
+
+### Latest stable release (macOS and Linux)
+```sh
+curl -fsSL https://raw.githubusercontent.com/chand1012/jeb/main/install.sh -o install.sh
+sh install.sh
+```
+
+Add `~/.local/bin` to your `PATH` if needed. To use a different directory,
+set `JEB_INSTALL_DIR` when running the script.
+Windows users can download the matching ZIP from
+[GitHub Releases](https://github.com/chand1012/jeb/releases).
+
+### Install with Go
+
+Install the latest version from source with Go:
+
+```sh
+go install github.com/chand1012/jeb@latest
+```
+
+To install the code in your current checkout instead, run this from the
+repository root:
+
+```sh
+go install .
+```
+
 ## Quick start
 
-1. Build the binary from this repository:
+1. [Install Jeb](#installation).
 
-   ```sh
-   mkdir -p bin
-   go build -o bin/jeb .
-   ```
-
-2. Jeb defaults to using Ollama. If you use another OpenAI-compatible provider, set its base URL and model name as described in [Configuration](#configuration).
+2. If you use another OpenAI-compatible provider, set its base URL
+   and model name as described in [Configuration](#configuration).
 
    ```sh
    export OPENAI_MODEL=qwen3.5:9b # or another model you have available
@@ -47,7 +71,7 @@ log probabilities Jeb needs. Check that capability before using a provider.
 3. Evaluate an example request:
 
    ```sh
-   ./bin/jeb < examples/choice.json
+   jeb < examples/choice.json
    ```
 
 The CLI reads **one** JSON request from stdin and writes **one** JSON response to
@@ -55,7 +79,7 @@ stdout. Model calls may vary between runs. Start with
 [the mixed example](examples/mixed.json) to exercise all three question types:
 
 ```sh
-./bin/jeb < examples/mixed.json
+jeb < examples/mixed.json
 ```
 
 ## Request format
@@ -171,7 +195,7 @@ model run. See [all example requests](examples/README.md).
 Start the server with the same provider settings used by the CLI:
 
 ```sh
-./bin/jeb serve --host 127.0.0.1 --port 6102
+jeb serve --host 127.0.0.1 --port 6102
 ```
 
 Then send a JSON request:
@@ -218,8 +242,8 @@ The current `.gitignore` does **not** exclude `config.yaml`.
 
 CLI flags include `--base-url`, `--api-key`, `--model` (`-m`), `--max-tokens`,
 `--reasoning-effort`, `--timeout`, `--max-retries`, and `--max-requests`.
-`serve` also accepts `--host` (`-H`) and `--port` (`-p`). Run `./bin/jeb --help`
-or `./bin/jeb serve --help` for the full flag list.
+`serve` also accepts `--host` (`-H`) and `--port` (`-p`). Run `jeb --help`
+or `jeb serve --help` for the full flag list.
 
 ## Container and releases
 

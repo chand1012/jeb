@@ -17,6 +17,7 @@ completions API. It runs as a CLI that reads one request from stdin or as an HTT
 - `pkg/version/` provides build metadata and an optional GitHub release check.
 - `examples/` contains sample JSON requests and usage instructions.
 - `bin/` holds the ignored local build output.
+- `install.sh` installs a checksum-verified binary from the latest stable GitHub release.
 - `.github/workflows/` builds Docker images and cross-platform binaries in CI.
 - `Justfile`, `Dockerfile`, `go.mod`, `go.sum`, and `config.example.yaml` define build tasks,
   the container image, dependencies, and an example configuration.
