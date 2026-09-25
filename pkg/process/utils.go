@@ -47,7 +47,7 @@ func JebPromptsToJebResponse(prompts []types.JebPrompt) (*types.JebResponse, err
 			slices.Sort(keys)
 			choiceByLabel := make(map[string]string, len(criteria))
 			for i, key := range keys {
-				label := strconv.Itoa(i + 1)
+				label := strconv.Itoa(i)
 				labels = append(labels, label)
 				choiceByLabel[label] = key
 			}
@@ -65,7 +65,7 @@ func JebPromptsToJebResponse(prompts []types.JebPrompt) (*types.JebResponse, err
 		case "score":
 			var score float64
 			criteria := prompt.Question.Criteria.([]string)
-			for i := 1; i <= len(criteria); i++ {
+			for i := range criteria {
 				labels = append(labels, strconv.Itoa(i))
 			}
 			probs, confidence := calc.Confidence(firstToken.TopLogProbs, labels)
@@ -75,7 +75,7 @@ func JebPromptsToJebResponse(prompts []types.JebPrompt) (*types.JebResponse, err
 			}
 			legend := make(map[string]string, len(criteria))
 			for i, c := range criteria {
-				legend[strconv.Itoa(i+1)] = c
+				legend[strconv.Itoa(i)] = c
 			}
 
 			jebResponse.Answers[prompt.Name] = types.Score{

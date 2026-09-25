@@ -129,14 +129,15 @@ option fits; Jeb builds the model prompt and handles option numbering for you.
 ```
 
 The answer contains the selected option, probabilities, and a `confidence`
-value. See [Compatibility details](#compatibility-details) for the current
-probability-key format.
+value. Probability keys are zero-based numeric option labels assigned in
+alphabetical order of option name.
 
 ### Score: rate against an ordered rubric
 
 Put rubric levels in order from low to high. Jeb returns a `legend` that maps
-level numbers back to their descriptions. The numeric `score` is a weighted
-average and can fall between levels.
+level numbers back to their descriptions. Levels start at 0, so a three-level
+rubric has labels `0`, `1`, and `2`. The numeric `score` is a weighted average
+of those indices and can fall between levels.
 
 ```json
 {
@@ -146,8 +147,8 @@ average and can fall between levels.
 }
 ```
 
-The answer also includes a probability for each level and a `confidence`
-value.
+The answer also includes a probability for each zero-based level and a
+`confidence` value.
 
 ### Noul: estimate the chance of Yes
 

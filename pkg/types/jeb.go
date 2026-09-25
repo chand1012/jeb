@@ -160,7 +160,7 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 			slices.Sort(keys)
 			optionCount = len(keys)
 			for i, key := range keys {
-				options += fmt.Sprintf("%d) %s - %s\n", i+1, key, criteria[key])
+				options += fmt.Sprintf("%d) %s - %s\n", i, key, criteria[key])
 			}
 		case "score":
 			responseInstruction = "Reply with only the option number."
@@ -169,29 +169,24 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 			criteria := q.Criteria.([]string)
 			optionCount = len(criteria)
 			for i, value := range criteria {
-				options += fmt.Sprintf("%d) %s\n", i+1, value)
+				options += fmt.Sprintf("%d) %s\n", i, value)
 			}
 		case "noul":
 			responseInstruction = "Reply with exactly Yes or No."
-			// check if criteria is nil
-			// if nil, simple options
-			if utils.IsNil(q.Criteria) {
-				options = "1) Yes\n2) No"
-				optionCount = 2
-			} else {
-				// if not nil, use the criteria to generate options.
-				// still yes and no, but the input will be labeled as
-				// map[string]string where the keys are true and false
+			options = "0) Yes"
+			if !utils.IsNil(q.Criteria) {
 				criteria := q.Criteria.(map[string]string)
-				for key, value := range criteria {
-					k := "Yes"
-					if key == "false" {
-						k = "No"
-					}
-					options += fmt.Sprintf("1) %s - %s\n", k, value)
+				if description, ok := criteria["true"]; ok {
+					options += " - " + description
 				}
-				optionCount = 2 // the options are always Yes and No
+				options += "\n1) No"
+				if description, ok := criteria["false"]; ok {
+					options += " - " + description
+				}
+			} else {
+				options += "\n1) No"
 			}
+			optionCount = 2
 		default:
 			return nil, fmt.Errorf("invalid question type: %s", q.Type)
 		}
