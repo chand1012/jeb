@@ -32,6 +32,14 @@ func TestToJebPromptsUsesZeroBasedOptions(t *testing.T) {
 		if !strings.Contains(got, want[prompt.Name]) {
 			t.Errorf("%s prompt lacks zero-based options: %q", prompt.Name, got)
 		}
+		if prompt.Name == "choice" {
+			if !strings.Contains(got, "exactly one number from 0 through 1") || !strings.Contains(got, "Do not use 1-based numbering") || !strings.Contains(got, "Do not include an option name, words, reasoning, punctuation, or any other text") {
+				t.Errorf("choice prompt lacks strict numeric output instruction: %q", got)
+			}
+			if !strings.Contains(prompt.Request.Messages[0].Content, "output exactly one listed option number and nothing else") {
+				t.Errorf("choice system prompt lacks strict numeric output instruction: %q", prompt.Request.Messages[0].Content)
+			}
+		}
 		if prompt.Request.TopLogProbs != 20 {
 			t.Errorf("%s requested %d top logprobs, want 20 to include options behind non-option tokens", prompt.Name, prompt.Request.TopLogProbs)
 		}

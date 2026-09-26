@@ -148,7 +148,6 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 
 		switch q.Type {
 		case "choice":
-			responseInstruction = "Reply with only the option number."
 			// criteria is a map[string]string
 			// first parse it
 			criteria := q.Criteria.(map[string]string)
@@ -160,6 +159,8 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 			for i, key := range keys {
 				options += fmt.Sprintf("%d) %s - %s\n", i, key, criteria[key])
 			}
+			messages[0].Content += " For this choice question, output exactly one listed option number and nothing else. Never explain your answer."
+			responseInstruction = fmt.Sprintf("Your entire response MUST be exactly one number from 0 through %d, corresponding to an option above. Output that number only. Do not use 1-based numbering. Do not include an option name, words, reasoning, punctuation, or any other text.", len(keys)-1)
 		case "score":
 			responseInstruction = "Reply with only the option number."
 			// criteria is a []string
