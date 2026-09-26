@@ -145,7 +145,6 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 
 		options := ""
 		responseInstruction := ""
-		var optionCount int
 
 		switch q.Type {
 		case "choice":
@@ -158,7 +157,6 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 				keys = append(keys, key)
 			}
 			slices.Sort(keys)
-			optionCount = len(keys)
 			for i, key := range keys {
 				options += fmt.Sprintf("%d) %s - %s\n", i, key, criteria[key])
 			}
@@ -167,7 +165,6 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 			// criteria is a []string
 			// coerce it then iterate
 			criteria := q.Criteria.([]string)
-			optionCount = len(criteria)
 			for i, value := range criteria {
 				options += fmt.Sprintf("%d) %s\n", i, value)
 			}
@@ -186,7 +183,6 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 			} else {
 				options += "\n1) No"
 			}
-			optionCount = 2
 		default:
 			return nil, fmt.Errorf("invalid question type: %s", q.Type)
 		}
@@ -196,11 +192,10 @@ func (r *JebRequest) ToJebPrompts(openaiConfig *config.OpenAIConfig) ([]JebPromp
 			Content: fmt.Sprintf("State: %s\nInstructions: %s\nOptions:\n%s\n%s", r.State, q.Instructions, options, responseInstruction),
 		})
 
-		// Ask for as many top logprobs as there are options so every option
-		// can be assigned a probability without biasing the normalization.
-		// (Providers cap this, e.g. at 20; questions with more options than
-		// the cap will have truncated confidence.)
-		topLogProbs := optionCount
+		// Top logprobs includes non-option tokens. Request the OpenAI-compatible
+		// maximum so those tokens do not crowd valid options out of the result.
+		// An option below the top 20 still cannot be measured by this API.
+		const topLogProbs = 20
 
 		requests = append(requests, JebPrompt{
 			Request: ChatCompletionRequest{

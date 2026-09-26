@@ -42,20 +42,21 @@ func Confidence(
 	return probabilities, confidence
 }
 
-func Noul(answer string, probs types.TopLogProbs) (float64, error) {
-	var noProbability float64
-	hasNo := false
+func Noul(_ string, probs types.TopLogProbs) (float64, error) {
+	var yesProbability, noProbability float64
+	hasYes, hasNo := false, false
 	for _, candidate := range probs {
 		switch strings.TrimSpace(candidate.Token) {
 		case "Yes":
-			return math.Exp(candidate.LogProb), nil
+			yesProbability = math.Exp(candidate.LogProb)
+			hasYes = true
 		case "No":
 			noProbability = math.Exp(candidate.LogProb)
 			hasNo = true
 		}
 	}
-	if strings.TrimSpace(answer) == "No" && hasNo {
-		return 1 - noProbability, nil
+	if hasYes && hasNo && yesProbability+noProbability > 0 {
+		return yesProbability / (yesProbability + noProbability), nil
 	}
-	return 0, fmt.Errorf("cannot determine Yes probability from given logprobs")
+	return 0, fmt.Errorf("cannot determine Yes probability: both Yes and No logprobs are required")
 }

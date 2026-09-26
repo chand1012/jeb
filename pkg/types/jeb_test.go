@@ -32,5 +32,8 @@ func TestToJebPromptsUsesZeroBasedOptions(t *testing.T) {
 		if !strings.Contains(got, want[prompt.Name]) {
 			t.Errorf("%s prompt lacks zero-based options: %q", prompt.Name, got)
 		}
+		if prompt.Request.TopLogProbs != 20 {
+			t.Errorf("%s requested %d top logprobs, want 20 to include options behind non-option tokens", prompt.Name, prompt.Request.TopLogProbs)
+		}
 	}
 }
