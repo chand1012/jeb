@@ -1,6 +1,8 @@
 package process
 
 import (
+	"fmt"
+	"log"
 	"sync"
 
 	"github.com/chand1012/jeb/pkg/config"
@@ -20,13 +22,38 @@ func newClient(openaiConfig *config.OpenAIConfig) *resty.Client {
 
 func chatCompletionsRequest(client *resty.Client, req types.ChatCompletionRequest) (types.ChatCompletionsResponse, error) {
 	var resp types.ChatCompletionsResponse
-	_, err := client.R().
+	httpResp, err := client.R().
 		SetContentType("application/json").
 		SetResponseExpectContentType("application/json").
 		SetBody(req).
 		SetResult(&resp).
 		Post("/chat/completions")
+	if err != nil {
+		return resp, err
+	}
+	if !httpResp.IsStatusSuccess() {
+		return resp, fmt.Errorf("chat completion returned HTTP %d", httpResp.StatusCode())
+	}
 	return resp, err
+}
+
+func requestPrompt(client *resty.Client, prompt *types.JebPrompt, maxRetries int) error {
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		response, err := chatCompletionsRequest(client, prompt.Request)
+		if err == nil {
+			prompt.Response = response
+			_, err = JebPromptsToJebResponse([]types.JebPrompt{*prompt})
+		}
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		if attempt < maxRetries {
+			log.Printf("retrying %s after attempt %d/%d: %v", prompt.Name, attempt+1, maxRetries+1, err)
+		}
+	}
+	return fmt.Errorf("%s failed after %d attempts: %w", prompt.Name, maxRetries+1, lastErr)
 }
 
 func Request(req types.JebRequest, conf *config.Config) (types.JebResponse, error) {
@@ -53,7 +80,7 @@ func Request(req types.JebRequest, conf *config.Config) (types.JebResponse, erro
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			res, err := chatCompletionsRequest(client, prompts[i].Request)
+			err := requestPrompt(client, &prompts[i], conf.OpenAI.MaxRetries)
 			if err != nil {
 				mu.Lock()
 				if first == nil {
@@ -62,7 +89,6 @@ func Request(req types.JebRequest, conf *config.Config) (types.JebResponse, erro
 				mu.Unlock()
 				return
 			}
-			prompts[i].Response = res
 		}(i)
 	}
 	wg.Wait()

@@ -37,7 +37,8 @@ openai:
   # HTTP timeout for each completion request.
   # Env: OPENAI_TIMEOUT
   timeout: 60s
-  # Number of retries for failed completion requests.
+  # Number of retries after the first attempt for failed HTTP requests or
+  # invalid model responses. 3 means up to 4 attempts total.
   # Env: OPENAI_MAX_RETRIES
   max_retries: 3
 

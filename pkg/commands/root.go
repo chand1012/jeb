@@ -22,7 +22,7 @@ func NewRootCommand() *cobra.Command {
 	flags.Int("max-tokens", 10, "maximum output tokens")
 	flags.String("reasoning-effort", "none", "reasoning effort")
 	flags.Duration("timeout", 60*time.Second, "request timeout")
-	flags.Int("max-retries", 3, "maximum API retries")
+	flags.Int("max-retries", 3, "retries after a failed completion (3 means up to 4 attempts)")
 	flags.Int("max-requests", 1, "maximum concurrent requests")
 	cmd.RunE = runRequest
 	cmd.AddCommand(serveCommand(), versionCommand())

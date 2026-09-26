@@ -52,9 +52,10 @@ func JebPromptsToJebResponse(prompts []types.JebPrompt) (*types.JebResponse, err
 				choiceByLabel[label] = key
 			}
 			probs, confidence := calc.Confidence(firstToken.TopLogProbs, labels)
-			choice := answer
-			if key, ok := choiceByLabel[strings.TrimSpace(firstToken.Token)]; ok {
-				choice = key
+			label := strings.TrimSpace(answer)
+			choice, ok := choiceByLabel[label]
+			if !ok || strings.TrimSpace(firstToken.Token) != label {
+				return nil, fmt.Errorf("invalid choice response for %s", prompt.Name)
 			}
 			jebResponse.Answers[prompt.Name] = types.Choice{
 				Type:          "choice",
